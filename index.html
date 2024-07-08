@@ -52,10 +52,10 @@
 
 <body>
     <div class="cardContainerOut">
-        <div class="cardContainer">
+        <div class="cardContainer" data-stock="10" data-price="150">
             <img src="./gorgeous-actress-iu-lee-ji-eun-in-blueming-song-shoot-qiangzhi-tw-61653_L.jpg" alt="">
             <h2>IU 照片 </h2>
-            <small>庫存 : 10</small>
+            <small class="stock">庫存 : 10</small>
             <p class="price">$150</p>
             <button class="btnMinus btnOperationSymbol">-</button>
             <!-- maximum不能超過庫存? -->
@@ -65,10 +65,10 @@
         </div>
 
 
-        <div class="cardContainer">
+        <div class="cardContainer" data-stock="7" data-price="200">
             <img src="./IU-New-Balance-Foot-Locker-Exclusive-Collection-3.jpeg" alt="">
             <h2>IU 照片 NB</h2>
-            <small>庫存 : 7</small>
+            <small class="stock">庫存 : 7</small>
             <p class="price">$200</p>
             <button class="btnMinus btnOperationSymbol">-</button>
             <!-- maximum不能超過庫存? -->
@@ -98,137 +98,159 @@
 
 
     <script>
-        // 購物車的減號功能
-        $(document).on('click', '.btnCartMinus', function () {
-            let $input = $(this).next();
-            let num = parseInt($input.val());
-            let maxStock = $(this).parent().data('stock'); // 读取库存数量
-            // console.log(maxStock);
-            if (num > 1) {
-                let newNum = num - 1;
-                $input.val(newNum);
+        $(document).ready(function () {
 
-                // 更新价格
-                let price = extractNumber($(this).parent().text());
-                let itemName = $(this).parent().contents().get(0).nodeValue.trim(); // 获取品名
-                $(this).parent().html(`${itemName} 
+
+            // 購物車的減號功能
+            $(document).on('click', '.btnCartMinus', function () {
+                let $input = $(this).parent().find('input');
+                let num = parseInt($(this).parent().find('input').val());
+                let maxStock = $(this).parent().data('stock'); // 读取库存数量
+                // console.log(maxStock);
+                if (num > 1) {
+                    let newNum = num - 1;
+                    $input.val(newNum);
+
+                    // 更新价格
+                    let price = extractNumber($(this).parent().text());
+                    // console.log($(this).parent().text());
+                    let itemName = $(this).parent().find('.spanItemName').text() // 获取品名
+                    $(this).parent().html(`<span class="spanItemName">${itemName}</span>
                            <button class="btnCartMinus btnOperationSymbol">-</button>
                            <input type="text" value="${newNum}">
                            <button class="btnCartPlus btnOperationSymbol">+</button>
-                           ${price / num * newNum} 元`).attr('data-stock', maxStock);
+                           <span class="spanPrice">${price / num * newNum} 元</span>
+                           <button class="btnRemove">移除商品</button>
+                           `).attr('data-stock', maxStock);
 
-                updateTotal();
-            } else {
-                if (confirm('是否要移除該項商品？')) {
-                    $(this).parent().remove();
                     updateTotal();
-                }
-            }
-        });
+                } 
+            });
 
-        // 購物車加號功能
-        $(document).on('click', '.btnCartPlus', function () {
-            let num = parseInt($(this).prev().val());
-            let maxStock = $(this).parent().data('stock'); // 读取库存数量
-            // console.log(maxStock);
-            if (!isNaN(num) && num < maxStock) {
-                let newNum = num + 1;
-                $(this).prev().val(newNum);
+            // 購物車加號功能
+            $(document).on('click', '.btnCartPlus', function () {
+                let num = parseInt($(this).parent().find('input').val());
+                let maxStock = $(this).parent().data('stock'); // 读取库存数量
+                // console.log(maxStock);
+                if (!isNaN(num) && num < maxStock) {
+                    let newNum = num + 1;
+                    $(this).parent().find('input').val(newNum);
 
-                // 更新价格
-                let price = extractNumber($(this).parent().text());
-                let itemName = $(this).parent().contents().get(0).nodeValue.trim(); // 获取品名
-                $(this).parent().html(`${itemName} 
+                    // 更新价格
+                    let price = extractNumber($(this).parent().text());
+                    let itemName = $(this).parent().find('.spanItemName').text() // 获取品名
+                    $(this).parent().html(`<span class="spanItemName">${itemName}</span> 
                                <button class="btnCartMinus btnOperationSymbol">-</button>
                                <input type="text" value="${newNum}">
                                <button class="btnCartPlus btnOperationSymbol">+</button>
-                               ${price / num * newNum} 元`).attr('data-stock', maxStock);;
+                               <span class="spanPrice">${price / num * newNum} 元</span>
+                               <button class="btnRemove">移除商品</button>
+                               `).attr('data-stock', maxStock);;
 
-                updateTotal();
-            }
-        });
-
-        // 卡片減號功能
-        $('.btnMinus').click(function () {
-            let num = parseInt($(this).next().val());
-            //   console.log($(this).next().val());
-
-            $(this).next().val(num > 1 ? num - 1 : num);
-        })
-
-
-
-        // 卡片加號功能
-        $('.btnPlus').click(function () {
-            let num = parseInt($(this).prev().val());
-            //   console.log( `${num}+1 `);
-            let maxStock = extractNumber($(this).prev().prev().prev().prev().text()); // 假设库存为1，可以动态设置
-            // console.log(maxStock);
-            if (!isNaN(num) && num < maxStock) {
-                $(this).prev().val(num + 1);
-            }
-        })
-
-
-        // 加入購物車按鈕功能
-        $('.btnAddCart').click(function () {
-            let priceText = $(this).prev().prev().prev().prev().text();
-            // console.log($(this).prev().prev().prev().prev().text());
-            let price = extractNumber(priceText);
-            // console.log(price);
-            let itemName = $(this).prev().prev().prev().prev().prev().prev().text();
-            // console.log(itemName);
-            let itemNum = $(this).prev().prev().val();
-            // console.log(itemNum);
-            let maxStock = extractNumber($(this).prev().prev().prev().prev().prev().text()); // 获取库存数量
-            $('.shoppingCart>ul').append(`<li data-stock="${maxStock}">${itemName} 
-                                        <button class="btnCartMinus btnOperationSymbol">-</button>
-                                        <input type="text" value="${itemNum}">
-                                        <button class="btnCartPlus btnOperationSymbol">+</button>
-
-                                        ${price * itemNum} 元
-                                        </li>
-                                        
-                                        `);
-            updateTotal();
-        })
-
-        // 更新总金额的函数
-        function updateTotal() {
-            let total = 0;
-            $('#itemList li').each(function () {
-                total += extractNumber($(this).text());
+                    updateTotal();
+                }
             });
-            $('#total').text(`總金額 : ${total} 元`);
-        }
 
-        // 提取数字的函数
-        function extractNumber(str) {
-            // 使用正则表达式提取所有数字
-            let match = str.match(/\d+/g);
-            // 如果匹配到数字，则返回匹配数组中的最后一个数字
-            // 否则返回0
-            // console.log(match);
-            return match ? parseInt(match[match.length - 1]) : 0;
-        }
+            // 卡片減號功能
+            $('.btnMinus').click(function () {
+                let num = parseInt($(this).parent().find('input').val());
+                //   console.log($(this).next().val());
 
-
-        // 購物車移除品項按鈕
-        $(document).on('click', '.btnRemove', function () {
-            $(this).prev().remove();
-            $(this).remove();
-
-            updateTotal();
-        });
+                $(this).parent().find('input').val(num > 1 ? num - 1 : num);
+            })
 
 
 
-        // // 清空購物車
-        // $('.btnClearCart').click(function () {
-        //     $('.shoppingCart>ul>li').remove();
-        // })
+            // 卡片加號功能
+            $('.btnPlus').click(function () {
+                let num = parseInt($(this).parent().find('input').val());
+                //   console.log( `${num}+1 `);
+                let maxStock = $(this).parent().data('stock'); // 读取库存数量
+                // console.log($(this).parent().find('input').val());
+                if (!isNaN(num) && num < maxStock) {
+                    $(this).parent().find('input').val(num + 1);
+                }
+            })
+
+            // 加入購物車按鈕功能
+            $('.btnAddCart').click(function () {
+                let price = $(this).parent().data('price');
+                let itemName = $(this).parent().find('h2').text();
+                let itemNum = $(this).parent().find('input').val();
+                let maxStock = extractNumber($(this).parent().find('.stock').text()); // 获取库存数量
+
+                // 檢查購物車中是否已經有該商品
+                let existingItem = $('#itemList li').filter(function () {
+                    let existingName = $(this).find('.spanItemName').text();
+                    return existingName === itemName ;
+                });
+                console.log(existingItem);
+                if (existingItem.length > 0) {
+                    // 如果已有該商品，增加數量
+                    let currentNum = parseInt(existingItem.find('input').val());
+                    let newNum = currentNum + parseInt(itemNum);
+                    if (newNum > maxStock) {
+                        alert('超過庫存數量');
+                        newNum = maxStock;
+                    }
+                    existingItem.find('.spanItemName').text(itemName);
+                    existingItem.find('input').val(newNum);
+                    let newPrice = price * newNum;
+                    existingItem.find('.spanPrice').text(`${newPrice} 元`);
+                    updateTotal();
+                } else {
+                    // 如果沒有該商品，新增一個項目
+                    $('#itemList').append(`<li data-stock="${maxStock}">
+                                            <span class="spanItemName">${itemName}</span>
+                                            <button class="btnCartMinus btnOperationSymbol">-</button>
+                                            <input type="text" value="${itemNum}">
+                                            <button class="btnCartPlus btnOperationSymbol">+</button>
+                                            <span class="spanPrice"> ${price * itemNum} 元</span>
+                                            <button class="btnRemove">移除商品</button>
+                                            </li>`);
+                    updateTotal();
+                }
+                updateTotal();
+            })
+
+            // 更新总金额的函数
+            function updateTotal() {
+                let total = 0;
+                $('#itemList li').each(function () {
+                    total += extractNumber($(this).text());
+                });
+                $('#total').text(`總金額 : ${total} 元`);
+            }
+
+            // 提取数字的函数
+            function extractNumber(str) {
+                // 使用正则表达式提取所有数字
+                let match = str.match(/\d+/g);
+                // 如果匹配到数字，则返回匹配数组中的最后一个数字
+                // 否则返回0
+                // console.log(match);
+                return match ? parseInt(match[match.length - 1]) : 0;
+            }
 
 
+            // 購物車移除品項按鈕
+            $(document).on('click', '.btnRemove', function () {
+                if (confirm('是否要移除該項商品？')) {
+                        $(this).parent().remove();
+                        updateTotal();
+                    }
+            });
+
+
+
+            // // 清空購物車
+            // $('.btnClearCart').click(function () {
+            //     $('.shoppingCart>ul>li').remove();
+            // })
+
+
+
+        })
     </script>
 </body>
 
